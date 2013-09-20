@@ -7,11 +7,9 @@ import com.intellij.openapi.fileTypes.StdFileTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.compiled.ClsFileImpl;
-import com.intellij.vcsUtil.VcsFileUtil;
 import javadec.Decompiler;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +36,13 @@ public class JavadecClassFileDecompiler implements BinaryFileDecompiler {
 
         try {
             byte[] bytes = FileUtil.loadBytes(file.getInputStream());
-            return decompiler.decompile(bytes);
+            // The header MUST have length 119
+            // It automatically collapsed by IDE
+            String header = "\n                                                     \n" +
+                    "  // Decompiled with JavaDec\n" +
+                    "  // see http://javadec.github.io\n" +
+                    "\n";
+            return header + decompiler.decompile(bytes);
         } catch (Exception e) {
             e.printStackTrace();
             return ClsFileImpl.decompile(PsiManager.getInstance(project), file);
